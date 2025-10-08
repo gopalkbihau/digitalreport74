@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Collapsible Sidebar Menu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // This configuration enables class-based dark mode for the Tailwind CDN.
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script>
+      // On page load or when changing themes, best to add inline in `head` to avoid FOUC
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+    </script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+
+      /* Global smooth transitions for theme changes */
+      body, div, header, main, nav, section, article, aside, footer, button, input {
+        transition-property: color, background-color, border-color, text-decoration-color;
+        transition-duration: 1s;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      svg, path {
+        transition-property: fill, stroke;
+        transition-duration: 1s;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.5s ease-in-out forwards;
+      }
+      @keyframes slideInFromRight {
+        from { opacity: 0; transform: translateX(30px); }
+        to { opacity: 1; transform: translateX(0); }
+      }
+      .animate-slideInFromRight {
+        animation: slideInFromRight 0.4s ease-out forwards;
+      }
+      @keyframes slideInFromLeft {
+        from { opacity: 0; transform: translateX(-30px); }
+        to { opacity: 1; transform: translateX(0); }
+      }
+      .animate-slideInFromLeft {
+        animation: slideInFromLeft 0.4s ease-out forwards;
+      }
+
+      /* Zoom Functionality Styles */
+      .zoom-wrapper .text-xs { font-size: calc(0.75rem * var(--zoom-factor, 1)); line-height: calc(1rem * var(--zoom-factor, 1)); }
+      .zoom-wrapper .text-sm { font-size: calc(0.875rem * var(--zoom-factor, 1)); line-height: calc(1.25rem * var(--zoom-factor, 1)); }
+      .zoom-wrapper .text-base { font-size: calc(1rem * var(--zoom-factor, 1)); line-height: calc(1.5rem * var(--zoom-factor, 1)); }
+      .zoom-wrapper .text-lg { font-size: calc(1.125rem * var(--zoom-factor, 1)); line-height: calc(1.75rem * var(--zoom-factor, 1)); }
+      .zoom-wrapper .text-xl { font-size: calc(1.25rem * var(--zoom-factor, 1)); line-height: calc(1.75rem * var(--zoom-factor, 1)); }
+      .zoom-wrapper .text-2xl { font-size: calc(1.5rem * var(--zoom-factor, 1)); line-height: calc(2rem * var(--zoom-factor, 1)); }
+      .zoom-wrapper .text-3xl { font-size: calc(1.875rem * var(--zoom-factor, 1)); line-height: 1; }
+      .zoom-wrapper .text-4xl { font-size: calc(2.25rem * var(--zoom-factor, 1)); line-height: 1; }
+      .zoom-wrapper .text-5xl { font-size: calc(3rem * var(--zoom-factor, 1)); line-height: 1; }
+      .zoom-wrapper {
+        font-size: calc(1rem * var(--zoom-factor, 1));
+        line-height: 1.6;
+      }
+      
+      @keyframes pulse-glow {
+        0%, 100% { box-shadow: 0 0 10px rgba(20, 184, 166, 0.3), 0 0 20px rgba(20, 184, 166, 0.2); }
+        50% { box-shadow: 0 0 20px rgba(20, 184, 166, 0.6), 0 0 30px rgba(20, 184, 166, 0.4); }
+      }
+      .animate-pulse-glow {
+        animation: pulse-glow 3s infinite ease-in-out;
+      }
+      
+      .pdf-avoid-break {
+        page-break-inside: avoid !important;
+      }
+
+      /* Homepage Artwork Animations */
+      @keyframes draw-path { to { stroke-dashoffset: 0; } }
+      .path-to-draw { stroke-dasharray: 1000; stroke-dashoffset: 1000; }
+      .group:hover .path-to-draw { animation: draw-path 2s ease-out forwards; }
+      
+      @keyframes rotate-gear { to { transform: rotate(360deg); } }
+      .group:hover .gear-1 { animation: rotate-gear 12s linear infinite; }
+      .group:hover .gear-2 { animation: rotate-gear 10s linear infinite reverse; }
+
+      @keyframes stack-coin {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      .group:hover .coin-1 { animation: stack-coin 0.5s ease-out forwards; }
+      .group:hover .coin-2 { animation: stack-coin 0.5s 0.1s ease-out forwards; }
+      .group:hover .coin-3 { animation: stack-coin 0.5s 0.2s ease-out forwards; }
+
+      @keyframes ripple {
+        from { transform: scale(0); opacity: 0.7; }
+        to { transform: scale(1.5); opacity: 0; }
+      }
+      .group:hover .ripple { animation: ripple 2s ease-out infinite; }
+      .group:hover .ripple-2 { animation-delay: 0.5s; }
+      .group:hover .ripple-3 { animation-delay: 1s; }
+
+      /* 3D Effects */
+      .perspective-container {
+        perspective: 1000px;
+      }
+      .card-3d-interactive {
+        transform-style: preserve-3d;
+      }
+      .hover-3d-scale {
+        transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+      .hover-3d-scale:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 14px 28px rgba(0,0,0,0.2), 0 10px 10px rgba(0,0,0,0.18);
+      }
+      .hover-3d-tilt {
+         transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+      .hover-3d-tilt:hover {
+        transform: rotateY(-5deg) rotateX(5deg) scale(1.05);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+      }
+      
+      /* Annotation / Notes Styles */
+      .editable-container {
+        position: relative;
+      }
+      .note-icon {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+      }
+      .editable-container:hover .note-icon {
+        opacity: 1;
+      }
+      .user-note {
+        background-color: #fefce8; /* yellow-50 */
+        border-left: 4px solid #facc15; /* yellow-400 */
+        padding: 1rem;
+        margin-top: 0.75rem;
+        border-radius: 0 0.5rem 0.5rem 0;
+        font-style: italic;
+        color: #422006; /* amber-950 */
+      }
+      .dark .user-note {
+        background-color: #422006; /* amber-950 */
+        border-left-color: #fcd34d; /* amber-300 */
+        color: #fef3c7; /* amber-100 */
+      }
+
+
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        #printable-content, #printable-content * {
+          visibility: visible;
+        }
+        #printable-content {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          padding: 1rem;
+        }
+        .pdf-avoid-break {
+          page-break-inside: avoid !important;
+        }
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@18.2.0/",
+    "react/": "https://esm.sh/react@18.2.0/",
+    "react": "https://esm.sh/react@18.2.0",
+    "@google/genai": "https://esm.sh/@google/genai"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-sky-100 text-slate-800 dark:bg-sky-900 dark:text-slate-200">
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
